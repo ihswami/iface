@@ -1,0 +1,11 @@
+numpy>=1.16
+scipy>=1.6
+open3d==0.19.0
+trimesh==4.11.2
+halo
+pot
+pyvista
+pymeshlab
+cython
+git+https://github.com/gattia/cycpd.git
+jupyter

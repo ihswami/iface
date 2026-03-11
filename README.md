@@ -1,5 +1,7 @@
 # IFACE
 
+[![arXiv](https://img.shields.io/badge/arXiv-2603.09860-b31b1b.svg)](https://arxiv.org/abs/2603.09860)
+
 **IFACE (Intrinsic Field–Aligned Coupled Embedding)** is a framework for computing **feature-aware coupling (soft correspondence) matrices and distances between protein surfaces**.
 
 The method integrates **intrinsic geometric structure and physicochemical surface fields** to measure **similarity between protein surfaces**.
@@ -23,7 +25,7 @@ Construct bidirectional surface maps
         ↓
 Compute structural and feature distances
         ↓
-Aggregate structural and feature distances to compute the IFACE and chemical distances across a dataset
+Aggregate structural and chemical feature-field distances to compute the IFACE and chemical distances across a dataset
 ```
 
 ---
@@ -87,7 +89,7 @@ The comparison pipeline:
    - hbond (hydrogen bonding propensity)
    - mean curvature
 3. Compute a **coupling matrix (soft correspondence matrix)** between vertices of the two surfaces.
-4. Compute geometric, feature-specific, and combined **distances** between the surfaces.
+4. Compute structural (geometric), feature-field-specific, and combined **distances** (IFACE and chemical) between the surfaces.
 
 Outputs include:
 
@@ -404,6 +406,26 @@ iface/
 ├── README.md
 └── LICENSE
 ```
+
+---
+
+## Citation
+
+If you use **IFACE** in your work, please cite the following paper:
+
+```bibtex
+@misc{swami2026jointgeometricchemicaldistanceprotein,
+      title={Joint Geometric-Chemical Distance for Protein Surfaces}, 
+      author={Himanshu Swami and John M. McBride and Jean-Pierre Eckmann and Tsvi Tlusty},
+      year={2026},
+      eprint={2603.09860},
+      archivePrefix={arXiv},
+      primaryClass={q-bio.BM},
+      url={https://arxiv.org/abs/2603.09860}, 
+}
+```
+
+---
 
 ## License
 

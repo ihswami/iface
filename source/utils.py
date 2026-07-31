@@ -101,79 +101,152 @@ def build_vertex_adjacency(faces, num_vertices):
 
 
 
+def compute_normalization_ranges(vertex_count):
+    scale_ratio = vertex_count / TARGET_VERTEX_COUNT
 
-def process_distances(results_path, min_max=True, weights=None):
-    """
-    This function processes the distance matrices, normalizes the columns, computes
-    the chemical and iface values, and returns the DataFrame.
+    scaled_minimums = {
+        feature: REF_MIN[feature] * scale_ratio ** P_EXPONENTS[feature]
+        for feature in P_EXPONENTS
+    }
+
+    scaled_maximums = {
+        feature: REF_MAX[feature] * scale_ratio ** P_EXPONENTS[feature]
+        for feature in P_EXPONENTS
+    }
+
+    return scaled_minimums, scaled_maximums
+
+
+
+def get_normalization_ranges(vertex_count):
+    if vertex_count == 3000:
+        return REF_MIN.copy(), REF_MAX.copy()
+
+    return compute_normalization_ranges(vertex_count)
     
-    Parameters:
-    - basepath (str): The base directory path where the results are stored.
-    - result_dir (str): The relative directory path where distance matrices are stored.
-    - min_max (bool): Whether to use min-max normalization (default: True).
-    - weights (list, optional): A list of weights for the chemical and iface computations.
 
-    Returns:
-    - pd.DataFrame: A processed and reordered DataFrame.
+def process_distances(results_path, weights=None):
     """
+    Load pairwise distances, apply fixed range normalization,
+    and compute geometry, chemical, and IFACE distances.
+    """
+    if weights is None:
+        weights = [1, 1, 1, 1, 1]
 
-    folders_names = os.listdir(results_path)
+    if len(weights) != 5:
+        raise ValueError("weights must contain exactly five values.")
 
     data = []
-    for folder in folders_names:
-        pair_files_contain = os.listdir(Path(results_path, folder))
-        for pair_file_name in pair_files_contain:
-            ID1, ID2 = pair_file_name[:-4].split("_")
-            pair_file_path = Path(results_path, folder, pair_file_name)
-            dist = np.array(np.load(pair_file_path))
-            data.append({'ID1': ID1, 'ID2': ID2, f'{folder}': dist})
 
-    # Create DataFrame from collected data
+    for folder_path in Path(results_path).iterdir():
+        if not folder_path.is_dir():
+            continue
+
+        feature = folder_path.name
+
+        for pair_file_path in folder_path.glob("*.npy"):
+            try:
+                ID1, ID2 = pair_file_path.stem.split("_")
+            except ValueError as exc:
+                raise ValueError(
+                    f"Unexpected filename: {pair_file_path.name}. "
+                    "Expected ID1_ID2.npy."
+                ) from exc
+
+            try:
+                distance = np.asarray(
+                    np.load(pair_file_path, allow_pickle=False)
+                ).squeeze()
+
+                if distance.size != 1:
+                    raise ValueError("Distance file must contain one value.")
+
+                data.append({
+                    "ID1": ID1,
+                    "ID2": ID2,
+                    feature: float(distance),
+                })
+
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Failed to load {pair_file_path}"
+                ) from exc
+
     df = pd.DataFrame(data)
 
-    # Group by ID1 and ID2 and take the first occurrence
-    df = df.groupby(['ID1', 'ID2'], as_index=False).first()
+    if df.empty:
+        raise ValueError(f"No distance files found in {results_path}.")
 
-    # Normalize columns, keeping unnormalized ones too
-    for column in df.columns:
-        if column not in ['ID1', 'ID2', 'pair_index']:
-            col_max = df[column].max()
-            col_min = df[column].min()
-            new_column = f'{column}_norm'
+    df = df.groupby(["ID1", "ID2"], as_index=False).first()
 
-            # Apply the chosen normalization method (min-max or max normalization)
-            if min_max:
-                df[new_column] = (df[column] - col_min) / (col_max - col_min)
-            else:
-                df[new_column] = df[column] / col_max
+    # Compute the fixed ranges once.
+    reference_minimums, reference_maximums = (
+        get_normalization_ranges(TARGET_VERTEX_COUNT)
+    )
 
-    # Compute 'chemical' and 'iface' columns based on the provided weights or default averaging
-    if weights:
-        df['chemical'] = (weights[1] * df['charge_norm'] + weights[2] * df['hbond_norm'] + weights[3] * df['hphob_norm'])
-        df['iface'] = (weights[0] * df['structural_norm'] + weights[1] * df['charge_norm'] + weights[2] * df['hbond_norm'] + weights[3] * df['hphob_norm'])
-    else:
-        df['chemical'] = (df['charge_norm'] + df['hbond_norm'] + df['hphob_norm']) / 3
-        df['iface'] = (df['structural_norm'] + df['charge_norm'] + df['hbond_norm'] + df['hphob_norm']) / 4
+    feature_columns = [
+        column
+        for column in df.columns
+        if column not in {"ID1", "ID2", "pair_index"}
+    ]
 
-    # Start with 'ID1' and 'ID2' as the first two columns
-    columns_order = ['ID1', 'ID2']
+    for column in feature_columns:
+        if column not in reference_minimums:
+            raise KeyError(
+                f"No normalization range defined for '{column}'."
+            )
 
-    # Add 'iface' and 'chemical'
-    if 'iface' in df.columns:
-        columns_order.append('iface')
-    if 'chemical' in df.columns:
-        columns_order.append('chemical')
+        distance_range = (
+            reference_maximums[column]
+            - reference_minimums[column]
+        )
 
-    # Add normalized columns
-    normed_columns = [col for col in df.columns if col.endswith('_norm')]
-    columns_order.extend(normed_columns)
+    
 
-    # Add original columns at the end
-    original_columns = [col for col in df.columns if not col.endswith('_norm') and col not in ['ID1', 'ID2', 'pair_index', 'iface', 'chemical']]
-    columns_order.extend(original_columns)
+        df[f"{column}_norm"] = df[column] / distance_range
 
-    # Reorder DataFrame columns based on the dynamically generated order
-    df = df[columns_order]
+    required_columns = {
+        "structural_norm",
+        "mean_curvature_norm",
+        "charge_norm",
+        "hbond_norm",
+        "hphob_norm",
+    }
 
-    return df
+    missing_columns = required_columns - set(df.columns)
+    if missing_columns:
+        raise KeyError(
+            f"Missing required distance columns: {sorted(missing_columns)}"
+        )
+
+    df["geometry"] = (
+        weights[0] * df["structural_norm"]
+        + weights[1] * df["mean_curvature_norm"]
+    )
+
+    df["chemical"] = (
+        weights[2] * df["charge_norm"]
+        + weights[3] * df["hbond_norm"]
+        + weights[4] * df["hphob_norm"]
+    )
+
+    df["iface"] = df["geometry"] + df["chemical"]
+
+    normalized_columns = [
+        column for column in df.columns
+        if column.endswith("_norm")
+    ]
+
+    original_columns = [
+        column for column in feature_columns
+        if column in df.columns
+    ]
+
+    columns_order = (
+        ["ID1", "ID2", "iface", "geometry", "chemical"]
+        + normalized_columns
+        + original_columns
+    )
+
+    return df[columns_order]
 

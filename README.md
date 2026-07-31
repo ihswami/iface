@@ -2,15 +2,15 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-2603.09860-b31b1b.svg)](https://arxiv.org/abs/2603.09860)
 
-**IFACE (Intrinsic Field–Aligned Coupled Embedding)** is a framework for computing **feature-aware coupling (soft correspondence) matrices and distances between protein surfaces**.
+**IFACE (Intrinsic Field–Aligned Coupled Embedding)** is a framework for computing **feature-aware soft correspondences and distances between protein surfaces**.
 
-The method integrates **intrinsic geometric structure and physicochemical surface fields** to measure **similarity between protein surfaces**.
+It combines **intrinsic geometry, mean-curvature information, and physicochemical surface fields** to quantify protein-surface similarity while also providing an explicit soft correspondence between surface vertices.
 
 IFACE enables:
 
 - protein surface comparison  
 - vertex correspondence estimation between surfaces  
-- computation of surface feature-fields, structural, chemical and IFACE distances  
+- computation of surface feature-fields, geometry, chemical and IFACE distances  
 
 ---
 
@@ -19,13 +19,13 @@ IFACE enables:
 ```
 Input protein surfaces with physicochemical fields
         ↓
-Optimize coupling matrix between surface vertices
+Optimize a soft coupling matrix between surface vertices
         ↓
 Construct bidirectional surface maps
         ↓
-Compute structural and feature distances
+Compute structural, mean-curvature, and physicochemical field distances
         ↓
-Aggregate structural and chemical feature-field distances to compute the IFACE and chemical distances across a dataset
+Aggregate the normalized components into geometry, chemical, and overall IFACE distances
 ```
 
 ---
@@ -83,18 +83,18 @@ IFACE represents each protein surface as a **triangular mesh equipped with multi
 The comparison pipeline:
 
 1. Represent protein surfaces as meshes.
-2. Attach **per-vertex physicochemical features**:
+2. Attach **per-vertex geometry-physicochemical features**:
    - charge (electrostatic)
    - hphob (hydrophobicity)
    - hbond (hydrogen bonding propensity)
    - mean curvature
 3. Compute a **coupling matrix (soft correspondence matrix)** between vertices of the two surfaces.
-4. Compute structural (geometric), feature-field-specific, and combined **distances** (IFACE and chemical) between the surfaces.
+4. Compute geometric, feature-field-specific, and combined **distances** (IFACE, geometry and chemical) between the surfaces.
 
 Outputs include:
 
 - coupling matrix (vertex soft correspondences)  
-- feature distances  
+- distances  
 
 ---
 
@@ -124,9 +124,13 @@ IFACE ready
 
 Run the IFACE pipeline:
 
+Choose the mesh resolution by setting `TARGET_VERTEX_COUNT` in `config.py`.
+
+Use `1000` or `2000` vertices for fast screening, and `3000` vertices for detailed analysis.
+
 ```bash
 python data/preprocessing/preprocess.py
-python run_iface.py --surf1 1JPZ --surf2 1TQN
+python run_iface.py --surf1 all --surf2 all
 ```
 
 Then assemble the final dataset:
@@ -259,6 +263,7 @@ results/
 │   ├── charge/
 │   ├── hbond/
 │   ├── hphob/
+│   ├── mean_curvature/
 │   └── structural/
 └── csv/
 ```
@@ -283,10 +288,11 @@ results/distances/
 
 Each directory contains pairwise **distances** computed for a specific surface feature.
 
-- structural — geometric surface distance  
-- charge — electrostatic distance  
-- hphob — hydrophobicity distance  
-- hbond — hydrogen bonding propensity distance  
+- **structural/** — Intrinsic geometric (surface structure) distance.
+- **mean_curvature/** — Mean curvature scalar field distance.
+- **charge/** — Electrostatic field distance.
+- **hphob/** — Hydrophobicity field distance.
+- **hbond/** — Hydrogen-bonding propensity field distance.
 
 ---
 
@@ -304,24 +310,28 @@ This notebook:
 - assembles a structured dataframe
 - exports the final dataset used for analysis
 
-The resulting dataframe contains the following columns.
+The resulting DataFrame contains the following columns:
 
-- `ID1`, `ID2`: identifiers (folder names under `data/processed/`) of the two protein surfaces being compared.
-- Distances with the suffix `_norm` are **min–max normalized distances**, scaled to the range `[0,1]` using the minimum and maximum values across the dataset for each distance type. Columns without `_norm` correspond to the raw distances computed by IFACE.
-- `chemical`: aggregated chemical distance computed from the normalized chemical feature distances (`charge_norm`, `hbond_norm`, `hphob_norm`) and lies in the range `[0,1]`.
-- `iface`: overall IFACE distance combining the structural and chemical distances and lies in the range `[0,1]`.
+- `ID1`, `ID2`: Identifiers of the two protein surfaces being compared. These correspond to folder names under `data/processed/`.
+- Columns ending in `_norm`: Range-normalized distances. Columns without the `_norm` suffix contain the corresponding raw distances computed by IFACE.
+- `chemical`: Aggregated chemical distance computed from the normalized electrostatic, hydrogen-bonding propensity, and hydrophobicity distances (`charge_norm`, `hbond_norm`, and `hphob_norm`).
+- `geometry`: Aggregated geometric distance computed from the normalized intrinsic structural and mean-curvature distances (`structural_norm` and `mean_curvature_norm`).
+- `iface`: Overall IFACE distance obtained by combining the `geometry` and `chemical` distances.
 
 Columns:
 
 - ID1  
 - ID2  
-- iface  
+- iface
+- geomtery  
 - chemical  
-- structural_norm  
+- structural_norm
+- mean_curvature_norm  
 - charge_norm  
 - hbond_norm  
 - hphob_norm  
 - structural  
+- mean_curvature
 - charge  
 - hbond  
 - hphob  
@@ -329,7 +339,7 @@ Columns:
 Example output:
 
 ```
-results/csv/distance_on_dataset.csv
+results/csv/distances.csv
 ```
 
 ---

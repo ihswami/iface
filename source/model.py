@@ -52,7 +52,7 @@ class IFACE:
         
         # Loop over all features + geometry
         for feature in self.features_list + ['structural']:
-            if feature not in ('mean_curvature', 'gaussian_curvature'):
+            if feature not in ('gaussian_curvature'):
                 check_feature_paths = get_saved_file_path(
                     label=feature,
                     surface1_name=self.surface1_name,

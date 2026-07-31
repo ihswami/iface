@@ -278,7 +278,7 @@ def compute_feature_distance(T, feature, surface1_name, surface2_name, top_k=1):
         dist_list.append(d1)
         dist_list.append(d2)
 
-    if feature == 'geometry':
+    if feature == 'structural':
         dist_list_sum = np.sqrt(0.5 * np.array(dist_list).sum())    
     else:
         dist_list_sum = 0.5 * np.array(dist_list).sum()

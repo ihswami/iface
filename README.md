@@ -2,7 +2,7 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-2603.09860-b31b1b.svg)](https://arxiv.org/abs/2603.09860)
 
-**IFACE (Intrinsic Field–Aligned Coupled Embedding)** is a framework for computing **feature-aware soft correspondences and distances between protein surfaces**.
+**IFACE (Intrinsic Field–Aligned Coupled Embedding)** is a framework for computing **geometry-chemical-aware soft correspondences and distances between protein surfaces**.
 
 It combines **intrinsic geometry, mean-curvature information, and physicochemical surface fields** to quantify protein-surface similarity while also providing an explicit soft correspondence between surface vertices.
 
@@ -17,15 +17,15 @@ IFACE enables:
 ## IFACE Pipeline
 
 ```
-Input protein surfaces with physicochemical fields
+Input protein surfaces with geometry-physicochemical fields
         ↓
-Optimize a soft coupling matrix between surface vertices
+Optimize a soft coupling matrix between surfaces
         ↓
 Construct bidirectional surface maps
         ↓
 Compute structural, mean-curvature, and physicochemical field distances
         ↓
-Aggregate the normalized components into geometry, chemical, and overall IFACE distances
+Aggregate the components into geometry, chemical, and overall IFACE distances
 ```
 
 ---
@@ -78,7 +78,7 @@ All experiments were conducted on a workstation with the following configuration
 
 ## Method Overview
 
-IFACE represents each protein surface as a **triangular mesh equipped with multiple physicochemical feature fields**.
+IFACE represents each protein surface as a **triangular mesh equipped with multiple geometry-physicochemical feature fields**.
 
 The comparison pipeline:
 
@@ -122,18 +122,16 @@ IFACE ready
 
 ## Quick Start
 
-Run the IFACE pipeline:
+Place the protein folders in data/raw/.
 
 Choose the mesh resolution by setting `TARGET_VERTEX_COUNT` in `config.py`.
-
-Use `1000` or `2000` vertices for fast screening, and `3000` vertices for detailed analysis.
 
 ```bash
 python data/preprocessing/preprocess.py
 python run_iface.py --surf1 all --surf2 all
 ```
 
-Then assemble the final dataset:
+Then assemble the final pairwise distances using the utility notebook:
 
 ```bash
 jupyter nbconvert --to notebook --execute analysis.ipynb --inplace
@@ -176,7 +174,9 @@ data/raw/
 
 ## Preprocessing
 
-After placing protein folders in `data/raw/`, run:
+To use a different mesh resolution, set TARGET_VERTEX_COUNT in config.py.
+
+Place the protein folders in data/raw/, then run:
 
 ```bash
 python data/preprocessing/preprocess.py
@@ -260,6 +260,9 @@ results/
 results/
 ├── coupling_matrix/
 ├── distances/
+│   ├── iface/
+│   ├── geometry/
+│   ├── chemical/
 │   ├── charge/
 │   ├── hbond/
 │   ├── hphob/
@@ -288,17 +291,20 @@ results/distances/
 
 Each directory contains pairwise **distances** computed for a specific surface feature.
 
-- **structural/** — Intrinsic geometric (surface structure) distance.
-- **mean_curvature/** — Mean curvature scalar field distance.
-- **charge/** — Electrostatic field distance.
-- **hphob/** — Hydrophobicity field distance.
-- **hbond/** — Hydrogen-bonding propensity field distance.
+- iface/ — Combined IFACE distance.
+- geometry/ — Combined structural and mean-curvature distance.
+- chemical/ — Combined charge, hydrophobicity, and hydrogen-bonding distance.
+- structural/ — Intrinsic geometric (surface structure) distance.
+- mean_curvature/ — Mean-curvature scalar field distance.
+- charge/ — Electrostatic field distance.
+- hphob/ — Hydrophobicity field distance.
+- hbond/ — Hydrogen-bonding propensity field distance.
 
 ---
 
 ## Analysis Notebook
 
-The main analysis entry point is:
+`analysis.ipynb` is a utility for assembling and analyzing pairwise distances; individual .npy files are available in `results/distances/`.
 
 ```
 analysis.ipynb
@@ -308,7 +314,7 @@ This notebook:
 
 - reads pairwise results from `results/distances/`
 - assembles a structured dataframe
-- exports the final dataset used for analysis
+- exports the final distances used for analysis
 
 The resulting DataFrame contains the following columns:
 

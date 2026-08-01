@@ -154,18 +154,19 @@ def process_distances(results_path, weights=None):
                 ) from exc
 
             try:
-                distance = np.asarray(
-                    np.load(pair_file_path, allow_pickle=False)
-                ).squeeze()
+                if feature not in ['geometry', 'chemical', 'iface']:
+                    distance = np.asarray(
+                        np.load(pair_file_path, allow_pickle=False)
+                    ).squeeze()
 
-                if distance.size != 1:
-                    raise ValueError("Distance file must contain one value.")
+                    if distance.size != 1:
+                        raise ValueError("Distance file must contain one value.")
 
-                data.append({
-                    "ID1": ID1,
-                    "ID2": ID2,
-                    feature: float(distance),
-                })
+                    data.append({
+                        "ID1": ID1,
+                        "ID2": ID2,
+                        feature: float(distance),
+                    })
 
             except Exception as exc:
                 raise RuntimeError(

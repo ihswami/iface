@@ -6,7 +6,7 @@ import trimesh
 
 from source.geometry import distance_matrix_shortest_edges_path as dsep
 from source.utils import rank_four_distance_difference_tensor_contraction as rftc
-
+from source.utils import get_normalization_ranges
 from source.config import *
 
 
@@ -265,9 +265,42 @@ def compute_weighted_hard_distance( feature_name, surface1_name, surface2_name, 
     return dist
 
 
+def load_norm_distance(feature_name, surface1_name, surface2_name):
+    min_ref, max_ref = get_normalization_ranges(TARGET_VERTEX_COUNT)
+
+    file = os.path.join(
+        BASEPATH, 'results', 'distances', feature_name,
+        f'{surface1_name}_{surface2_name}.npy'
+    )
+
+    if not os.path.exists(file):
+        raise FileNotFoundError(file)
+
+    raw = np.load(file)
+    return raw / (max_ref[feature_name] - min_ref[feature_name])
 
 
 def compute_feature_distance(T, feature, surface1_name, surface2_name, top_k=1):
+
+    if feature == 'geometry':
+        return (
+            load_norm_distance('structural', surface1_name, surface2_name)
+            + load_norm_distance('mean_curvature', surface1_name, surface2_name)
+        )
+
+    if feature == 'chemical':
+        return (
+            load_norm_distance('hbond', surface1_name, surface2_name)
+            + load_norm_distance('hphob', surface1_name, surface2_name)
+            + load_norm_distance('charge', surface1_name, surface2_name)
+        )
+
+    if feature == 'iface':
+        return (
+            compute_feature_distance(T, 'geometry', surface1_name, surface2_name, top_k=top_k)
+            + compute_feature_distance(T, 'chemical', surface1_name, surface2_name, top_k=top_k)
+        )
+    
     forward = indices_along_normalized_top_k_weights(T, axis=1, top_k=top_k)
     backward = indices_along_normalized_top_k_weights(T, axis=0, top_k=top_k)
     

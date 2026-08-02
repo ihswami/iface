@@ -71,13 +71,15 @@ def indices_along_normalized_top_k_weights(matrix, top_k, axis=0):
        Get the top-k entries along the given axis and normalize the selected values
     so each group (column if axis=0, row if axis=1) sums to 1.
 
-    Returns (rank-grouped):
-        [
-          {group_idx: (weight_at_rank_i, other_axis_index), ...},  # rank 1
-          {group_idx: (weight_at_rank_i, other_axis_index), ...},  # rank 2
-          ...
-          {group_idx: (weight_at_rank_k, other_axis_index), ...},  # rank k
-        ]
+    Returns:
+        top_k_maps : list of dict
+            Rank-grouped top-k correspondences:
+
+            [
+                {source_idx: (weight, target_idx), ...},  # rank 1
+                {source_idx: (weight, target_idx), ...},  # rank 2
+                ...
+            ]
     """
     n_rows, n_cols = matrix.shape
 
@@ -238,28 +240,37 @@ def compute_weighted_hard_distance( feature_name, surface1_name, surface2_name, 
 
     else:
         # ---- Structural branch ----
-
-        map12, map12_weights, map21, map21_weights = _validate_or_build_maps(map12, map21)
-    
+        # Build a single top-k soft correspondence matrix.
         T12 = np.zeros_like(T, dtype=float)
-        # surface1 -> surface2
-        T12[np.arange(m), map12] = map12_weights  
-    
-        
-        DG1 = globalize_distance(D1, sigma= 0.1 * np.max(D1), epsilon= 0.1)
-        DG2 = globalize_distance(D2, sigma= 0.1 * np.max(D2), epsilon= 0.1)
-        
-        # surface1 ->  surface2
-        dist12 = float((rftc(DG1, DG2, T12)))
 
+        for rank_map in map12:
+            weights, indices = np.array(list(rank_map.values())).T
+            indices = indices.astype(int)
+            T12[np.arange(m), indices] = weights
 
         T21 = np.zeros_like(T, dtype=float)
-        
-        # surface2 ->  surface1
-        T21[map21, np.arange(n)] = map21_weights  
-       
-        dist21 = float((rftc(DG1, DG2, T21)))      
-       
+
+        for rank_map in map21:
+            weights, indices = np.array(list(rank_map.values())).T
+            indices = indices.astype(int)
+            T21[indices, np.arange(n)] = weights
+
+
+        DG1 = globalize_distance(
+            D1,
+            sigma=0.1 * np.max(D1),
+            epsilon=0.1
+        )
+
+        DG2 = globalize_distance(
+            D2,
+            sigma=0.1 * np.max(D2),
+            epsilon=0.1
+        )
+
+        dist12 = float(rftc(DG1, DG2, T12))
+        dist21 = float(rftc(DG1, DG2, T21))
+
         dist = (dist12, dist21)
 
     return dist
@@ -301,22 +312,49 @@ def compute_feature_distance(T, feature, surface1_name, surface2_name, top_k=1):
             + compute_feature_distance(T, 'chemical', surface1_name, surface2_name, top_k=top_k)
         )
     
-    forward = indices_along_normalized_top_k_weights(T, axis=1, top_k=top_k)
-    backward = indices_along_normalized_top_k_weights(T, axis=0, top_k=top_k)
-    
-    dist_list = []
-    for k in range(top_k):    
-        d1, d2 = compute_weighted_hard_distance(feature_name=feature, surface1_name=surface1_name, surface2_name= surface2_name, 
-                                                T=T,  map12 = forward[k], map21 = backward[k])
-        dist_list.append(d1)
-        dist_list.append(d2)
+    forward = indices_along_normalized_top_k_weights(
+        T, axis=1, top_k=top_k
+    )
+
+    backward = indices_along_normalized_top_k_weights(
+        T, axis=0, top_k=top_k
+    )
+
 
     if feature == 'structural':
-        dist_list_sum = np.sqrt(0.5 * np.array(dist_list).sum())    
+        # Use all top-k correspondences simultaneously
+        # input all rank maps simultaneously
+        d1, d2 = compute_weighted_hard_distance(
+            feature_name=feature,
+            surface1_name=surface1_name,
+            surface2_name=surface2_name,
+            T=T,
+            map12=forward,
+            map21=backward
+        )
+
+        dist = np.sqrt(0.5 * (d1 + d2))
+
+
     else:
-        dist_list_sum = 0.5 * np.array(dist_list).sum()
+        dist_list = []
 
-    dist = dist_list_sum
+        for k in range(top_k):
+            # input single rank map at a time
+            d1, d2 = compute_weighted_hard_distance(
+                feature_name=feature,
+                surface1_name=surface1_name,
+                surface2_name=surface2_name,
+                T=T,
+                map12=forward[k],
+                map21=backward[k]
+            )
 
-    return dist   
+            dist_list.append(d1)
+            dist_list.append(d2)
+
+        dist = 0.5 * np.array(dist_list).sum()
+
+
+    return dist
 

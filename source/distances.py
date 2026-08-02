@@ -354,7 +354,6 @@ def compute_feature_distance(T, feature, surface1_name, surface2_name, top_k=1):
             dist_list.append(d2)
 
         dist = 0.5 * np.array(dist_list).sum()
-
-
+        
     return dist
 

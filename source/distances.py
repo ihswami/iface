@@ -145,8 +145,8 @@ def compute_weighted_hard_distance( feature_name, surface1_name, surface2_name, 
         raise ValueError("T contains non-finite values.")
     m, n = T.shape
 
-    mesh1_path = os.path.join(BASEPATH, 'data', 'processed', surface1_name, f'{surface1_name}.ply')
-    mesh2_path = os.path.join(BASEPATH, 'data', 'processed', surface2_name, f'{surface2_name}.ply')
+    mesh1_path = os.path.join(BASEPATH, 'data', 'inputs', surface1_name, f'{surface1_name}.ply')
+    mesh2_path = os.path.join(BASEPATH, 'data', 'inputs', surface2_name, f'{surface2_name}.ply')
     geo_path1 = os.path.join(BASEPATH, 'precomputed_geodesics', f'{surface1_name}.npy')
     geo_path2 = os.path.join(BASEPATH, 'precomputed_geodesics', f'{surface2_name}.npy')
 
@@ -193,8 +193,8 @@ def compute_weighted_hard_distance( feature_name, surface1_name, surface2_name, 
 
     if feature_name != 'structural':
         # ---- Load features ----
-        feat1_path = os.path.join(BASEPATH, 'data', 'processed', surface1_name, f'{surface1_name}_{feature_name}.npy')
-        feat2_path = os.path.join(BASEPATH, 'data', 'processed', surface2_name, f'{surface2_name}_{feature_name}.npy')
+        feat1_path = os.path.join(BASEPATH, 'data', 'inputs', surface1_name, f'{surface1_name}_{feature_name}.npy')
+        feat2_path = os.path.join(BASEPATH, 'data', 'inputs', surface2_name, f'{surface2_name}_{feature_name}.npy')
 
 
         feat1 = np.load(feat1_path) # (m,) or (m, d)
@@ -354,6 +354,6 @@ def compute_feature_distance(T, feature, surface1_name, surface2_name, top_k=1):
             dist_list.append(d2)
 
         dist = 0.5 * np.array(dist_list).sum()
-        
+
     return dist
 

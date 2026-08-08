@@ -70,8 +70,8 @@ class IFACE:
 
     
     def scalar_field_cost(self, surface1_name, surface2_name):
-        surf1_path = os.path.join(BASEPATH, 'data', 'processed', surface1_name, f'{surface1_name}')
-        surf2_path = os.path.join(BASEPATH, 'data', 'processed', surface2_name, f'{surface2_name}')
+        surf1_path = os.path.join(BASEPATH, 'data', 'inputs', surface1_name, f'{surface1_name}')
+        surf2_path = os.path.join(BASEPATH, 'data', 'inputs', surface2_name, f'{surface2_name}')
         feat1 = []
         feat2 = []
         # Load features for both surfaces

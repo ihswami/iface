@@ -12,13 +12,12 @@ import scipy.sparse as sp
 from multiprocessing import Pool, cpu_count
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
 from source.geometry import distance_matrix_shortest_edges_path as dsep
 from source.geometry import compute_curvatures
 from source.config import *
-
 
 
 
@@ -245,7 +244,7 @@ def simplify_mesh_and_properties(
 
 def simplify_mesh_and_properties_wrapper(surface):
     raw_dir = os.path.join(BASEPATH, "data", "raw", surface)
-    dest_dir = os.path.join(BASEPATH, "data", "processed", surface)
+    dest_dir = os.path.join(BASEPATH, "data", "inputs", surface)
 
     mesh_path = os.path.join(raw_dir, f"{surface}.ply")
     if not os.path.exists(mesh_path):
@@ -275,7 +274,7 @@ def compute_and_save_shortest_edge_geodesic(name):
     output_dir = os.path.join(BASEPATH, "precomputed_geodesics")
     os.makedirs(output_dir, exist_ok=True)
 
-    data_path = os.path.join(BASEPATH, "data", "processed")
+    data_path = os.path.join(BASEPATH, "data", "inputs")
     ply_path = os.path.join(data_path, name, f"{name}.ply")
     dist_path = os.path.join(output_dir, f"{name}.npy")
 
@@ -317,7 +316,8 @@ if __name__ == "__main__":
     ncpu = cpu_count()
 
     raw_path = os.path.join(BASEPATH, "data", "raw")
-    des_path = os.path.join(BASEPATH, "data", "processed")
+    des_path = os.path.join(BASEPATH, "data", "inputs")
+
 
     # ---- simplify ----
     raw_names = list_mesh_names(raw_path)

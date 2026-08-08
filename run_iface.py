@@ -11,7 +11,7 @@ from source.config import *
 
 
 def list_available_surfaces():
-    data_path = os.path.join(BASEPATH, 'data', 'processed')
+    data_path = os.path.join(BASEPATH, 'data', 'inputs')
     return sorted([d for d in os.listdir(data_path) if os.path.isdir(os.path.join(data_path, d))])
 
 

@@ -134,7 +134,7 @@ def init_transport_plan(
         p = os.path.join
         fields = []
         for feat in feature_list:
-            field = np.load(p(base, "data", 'processed', name, f"{name}_{feat}.npy"))
+            field = np.load(p(base, "data", 'inputs', name, f"{name}_{feat}.npy"))
             fields.append(field)
 
         return fields
@@ -351,9 +351,9 @@ def unitnorm_mesh(m):
 def get_marginal_distribution(surface1_name, surface2_name,
                                feature_list = ['charge', 'hphob', 'hbond', 'mean_curvature'],
                                 area_only=False):
-    surface1_path = os.path.join(BASEPATH, 'data', 'processed', surface1_name, f'{surface1_name}.ply')
+    surface1_path = os.path.join(BASEPATH, 'data', 'inputs', surface1_name, f'{surface1_name}.ply')
     mesh1 = trimesh.load(surface1_path)
-    surface2_path = os.path.join(BASEPATH, 'data', 'processed', surface2_name, f'{surface2_name}.ply')
+    surface2_path = os.path.join(BASEPATH, 'data', 'inputs', surface2_name, f'{surface2_name}.ply')
     mesh2 = trimesh.load(surface2_path)
 
     # vertex-based area weight (not normalized)
@@ -367,9 +367,9 @@ def get_marginal_distribution(surface1_name, surface2_name,
         return weights1, weights2
     
     for feat_name in feature_list:
-        feat_path1 = os.path.join(BASEPATH, 'data', 'processed', surface1_name, f'{surface1_name}_{feat_name}.npy')
+        feat_path1 = os.path.join(BASEPATH, 'data', 'inputs', surface1_name, f'{surface1_name}_{feat_name}.npy')
         feat1 = np.load(feat_path1)
-        feat_path2 = os.path.join(BASEPATH, 'data', 'processed', surface2_name, f'{surface2_name}_{feat_name}.npy')
+        feat_path2 = os.path.join(BASEPATH, 'data', 'inputs', surface2_name, f'{surface2_name}_{feat_name}.npy')
         feat2 = np.load(feat_path2)
         featmin = min(feat1.min(), feat2.min())
         # make it non-negative but do NOT normalize
@@ -394,8 +394,8 @@ def optimize_coupling(surface1_name, surface2_name, feature_list,  M, verbose=Fa
     print(" === Starting optimzation for coupling matrix ===")
     
     # Paths
-    surface1_path = os.path.join(BASEPATH, 'data', 'processed', surface1_name, f'{surface1_name}.ply')
-    surface2_path = os.path.join(BASEPATH, 'data', 'processed', surface2_name, f'{surface2_name}.ply')
+    surface1_path = os.path.join(BASEPATH, 'data', 'inputs', surface1_name, f'{surface1_name}.ply')
+    surface2_path = os.path.join(BASEPATH, 'data', 'inputs', surface2_name, f'{surface2_name}.ply')
     
     
     mesh1 = trimesh.load(surface1_path)

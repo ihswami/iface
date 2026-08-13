@@ -61,7 +61,7 @@ All experiments were conducted on a workstation with the following configuration
 - [Quick Start](#quick-start)
 - [Data Layout](#data-layout)
 - [Input Requirements](#input-requirements)
-- [Preprocessing](#preprocessing)
+- [Prepare Inputs](#prepare-inputs)
 - [Running IFACE](#running-iface)
 - [Feature Selection](#feature-selection)
 - [Outputs](#outputs)
@@ -127,7 +127,7 @@ Place the protein folders in data/raw/.
 Choose the mesh resolution by setting `TARGET_VERTEX_COUNT` in `config.py`.
 
 ```bash
-python data/preprocessing/preprocess.py
+python source/prepare_inputs.py
 python run_iface.py --surf1 all --surf2 all
 ```
 
@@ -172,22 +172,22 @@ data/raw/
 
 ---
 
-## Preprocessing
+## Prepare Inputs
 
 To use a different mesh resolution, set TARGET_VERTEX_COUNT in config.py.
 
 Place the protein folders in data/raw/, then run:
 
 ```bash
-python data/preprocessing/preprocess.py
+python source/prepare_inputs.py
 ```
 
-This step preprocesses the input data, computes the required geodesic information, and prepares it for IFACE.
+This step prepare the input data, computes the required geodesic information, and prepares it for IFACE.
 
-Processed data is stored in:
+Input data is stored in:
 
 ```
-data/processed/
+data/inputs/
 ```
 
 Precomputed geodesic information is stored in:
@@ -200,7 +200,7 @@ precomputed_geodesics/
 
 ## Running IFACE
 
-`run_iface.py` compares protein surfaces specified by folder name under `data/processed/`.
+`run_iface.py` compares protein surfaces specified by folder name under `data/inputs/`.
 
 ### Single Pair
 
@@ -318,7 +318,7 @@ This notebook:
 
 The resulting DataFrame contains the following columns:
 
-- `ID1`, `ID2`: Identifiers of the two protein surfaces being compared. These correspond to folder names under `data/processed/`.
+- `ID1`, `ID2`: Identifiers of the two protein surfaces being compared. These correspond to folder names under `data/inputs/`.
 - Columns ending in `_norm`: Range-normalized distances. Columns without the `_norm` suffix contain the corresponding raw distances computed by IFACE.
 - `chemical`: Aggregated chemical distance computed from the normalized electrostatic, hydrogen-bonding propensity, and hydrophobicity distances (`charge_norm`, `hbond_norm`, and `hphob_norm`).
 - `geometry`: Aggregated geometric distance computed from the normalized intrinsic structural and mean-curvature distances (`structural_norm` and `mean_curvature_norm`).
@@ -407,9 +407,7 @@ iface/
 │
 ├── data/
 │   ├── raw/
-│   ├── processed/
-│   └── preprocessing/
-│       └── preprocess.py
+│   ├── inputs/  
 │
 ├── precomputed_geodesics/
 │

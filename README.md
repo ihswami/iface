@@ -1,5 +1,6 @@
 # IFACE
 
+[![DOI](https://img.shields.io/badge/DOI-10.1021%2Facs.jcim.6c02785-blue.svg)](https://doi.org/10.1021/acs.jcim.6c02785)
 [![arXiv](https://img.shields.io/badge/arXiv-2603.09860-b31b1b.svg)](https://arxiv.org/abs/2603.09860)
 
 **IFACE (Intrinsic Field–Aligned Coupled Embedding)** is a framework for computing **geometry-chemical-aware soft correspondences and distances between protein surfaces**.
@@ -32,13 +33,17 @@ Aggregate the components into geometry, chemical, and overall IFACE distances
 
 ## Abstract
 
-Protein function is executed at the molecular surface, where shape and chemistry act together to govern interaction. Yet most comparison methods treat these aspects separately, privileging either global fold or local descriptors and missing their coupled organization.
+Proteins recognize, bind, and catalyze through molecular surfaces, where geometry and chemical patterning determine interaction. Comparing these surfaces requires both a geometric--chemical distance and a correspondence that relates one complete surface to another.
 
-Here we introduce IFACE (Intrinsic Field–Aligned Coupled Embedding), a correspondence-based framework that aligns protein surfaces through probabilistic coupling of intrinsic geometry with spatially distributed chemical fields. From this alignment, we derive a joint geometric–chemical distance that integrates structural and physicochemical discrepancies within a single formulation.
+Here we introduce IFACE (Intrinsic Field--Aligned Coupled Embedding). IFACE derives a symmetric geometric--chemical distance by optimizing a probabilistic coupling over intrinsic geometry, mean curvature, electrostatics, hydrophobicity, and hydrogen-bond propensity. The same coupling provides an explicit surface map.
 
-Across diverse proteins, this distance separates conformational variability from true structural divergence more effectively than fold-based similarity measures. Applied to the cytochrome P450 family, it reveals coherent family-level organization and identifies conserved buried catalytic pockets despite the complex topology.
+For molecular-dynamics conformers, IFACE distinguishes the same protein from distinct proteins more accurately than TM-distance and a
+Laplace--Beltrami spectral distance. A Jensen--Shannon distribution distance performs best in this binary identity test, because aggregate surface-feature distributions already identify each protein.
 
-By linking interpretable surface correspondences with a unified distance, IFACE establishes a principled basis for comparing protein interfaces and detecting functionally related interaction patches across proteins.
+A distance must also satisfy a global requirement: its pairwise values must place many distinct protein surfaces consistently in one space. We therefore tested IFACE across six protein families. It produces the strongest family classification and clustering among the distributional, spectral, MaSIF, and SurfaceID comparisons.
+
+The inferred maps preserve geodesic neighborhoods and transfer
+heme-centered pocket regions across cytochrome P450 proteins. IFACE therefore provides, from one construction, both a distance between complete protein surfaces and the local map that explains that distance.
 
 ---
 
@@ -428,14 +433,12 @@ iface/
 If you use **IFACE** in your work, please cite the following paper:
 
 ```bibtex
-@misc{swami2026jointgeometricchemicaldistanceprotein,
-      title={Joint Geometric-Chemical Distance for Protein Surfaces}, 
-      author={Himanshu Swami and John M. McBride and Jean-Pierre Eckmann and Tsvi Tlusty},
-      year={2026},
-      eprint={2603.09860},
-      archivePrefix={arXiv},
-      primaryClass={q-bio.BM},
-      url={https://arxiv.org/abs/2603.09860}, 
+@article{swamigeometric2026,
+  title   = {Geometric--Chemical Distance between Protein Surfaces},
+  author  = {Swami, Himanshu and McBride, John M. and Eckmann, Jean-Pierre and Tlusty, Tsvi},
+  journal = {Journal of Chemical Information and Modeling},
+  year    = {2026},
+  doi     = {10.1021/acs.jcim.6c02785}
 }
 ```
 

@@ -3,7 +3,27 @@ from pathlib import Path
 
 BASEPATH = Path(__file__).resolve().parent.parent
 
+
+# Target number of vertices for the protein surface mesh.
+#
+# Default: 1000 vertices for reduced computational time and memory usage.
+# Any positive integer can be specified, subject to mesh generation
+# constraints and available computational resources.
+#
+# Example configurations:
+#   1000 - Default; lower computational cost.
+#   2000 - Intermediate mesh resolution.
+#   3000 - Higher resolution used in the main benchmarks of the
+#          published IFACE paper.
+
 TARGET_VERTEX_COUNT = 1000
+
+
+
+
+
+
+
 
 # Empirically fitted scaling exponents used to transfer distance
 # normalization ranges across different mesh resolutions.
